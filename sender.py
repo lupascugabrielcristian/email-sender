@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import base64
 import os
+import mimetypes
 from email.message import EmailMessage
 
 import google.auth
@@ -14,7 +15,7 @@ from google.oauth2.credentials import Credentials
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
-def send_email(destination_email):
+def send_email(destination_email, attachment_file):
     """Shows basic usage of the Gmail API.
     Lists the user's Gmail labels.
     """
@@ -39,22 +40,34 @@ def send_email(destination_email):
         # Call the Gmail API
         service = build('gmail', 'v1', credentials=creds)
         message = EmailMessage()
-        message.set_content("Test email")
+
+        # Headers
         message['To'] = destination_email
         message['From'] = 'mengelesCristi@gmail.com'
         message['Subject'] = "Something special"
 
+        # Text
+        message.set_content("Please receive the attached payslip")
+
+        # Attachment - get type
+        type_subtype, _ = mimetypes.guess_type( attachment_file )
+        maintype, subtype = type_subtype.split('/')
+
+        # Attachment
+        with open( attachment_file, 'rb' ) as fp:
+            attachement_data = fp.read()
+        message.add_attachment( attachement_data, maintype, subtype )
 
         # encoded message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
 
-        create_message = {
+        message_body = {
             'raw': encoded_message
         }
 
         # pylint: disable=E1101
-        send_message = ( service.users().messages().send(userId="me", body=create_message).execute() )
+        send_message = ( service.users().messages().send(userId="me", body=message_body).execute() )
         print(F'Message Id: {send_message["id"]}')
 
     except HttpError as error:

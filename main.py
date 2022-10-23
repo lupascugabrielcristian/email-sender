@@ -43,7 +43,7 @@ while True:
         continue
 
     payslip = payslips[index_to_send - 1]
-    sender.send_email(payslip.email)
+    sender.send_email(payslip.email, payslip.pdf_location)
 
 
 
